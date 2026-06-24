@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generator Surat Hasil Kesehatan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    .pdf-font {
+      font-family: 'Times New Roman', Times, serif;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen text-gray-800">
+
+  <header class="bg-[#0056b3] text-white px-6 py-4 flex justify-between items-center shadow-md">
+    <h1 class="text-xl font-bold tracking-wide">GENERATOR SURAT HASIL KESEHATAN</h1>
+    <button onclick="generatePDF()"
+      class="bg-white text-[#0056b3] border border-white hover:bg-blue-50 px-4 py-1.5 rounded text-sm font-medium transition flex items-center gap-1 shadow">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      Generate PDF
+    </button>
+  </header>
+
+  <main class="max-w-5xl mx-auto p-6">
+    <div class="bg-white rounded-lg shadow-md border border-gray-200 p-6 mb-4">
+      <div class="border-b pb-4 mb-6">
+        <h2 class="text-lg font-bold text-gray-700 uppercase tracking-wider">Form Input Data</h2>
+      </div>
+
+      <div class="mb-8 bg-gray-50 p-4 rounded border border-gray-200">
+        <label class="text-sm font-semibold text-gray-700 block mb-2">Gambar Header / Kop Surat (Opsional)</label>
+        <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+          <div
+            class="w-full sm:w-2/3 h-28 border-2 border-dashed border-gray-300 rounded bg-white flex items-center justify-center overflow-hidden relative">
+            <img id="kop_preview" src="" class="max-w-full max-h-full object-contain hidden" alt="Pratinjau Kop Surat">
+            <span id="kop_placeholder" class="text-sm text-gray-400 text-center px-4">Belum ada gambar kop surat
+              diunggah.<br><span class="text-xs">Sistem akan menggunakan Kop Surat bawaan (Kemenkes).</span></span>
+          </div>
+          <div>
+            <input type="file" id="in_kop_file" accept="image/*" class="hidden" onchange="handleKopUpload(event)">
+            <button type="button" onclick="document.getElementById('in_kop_file').click()"
+              class="bg-gray-700 hover:bg-gray-800 text-white text-sm font-semibold px-4 py-2 rounded shadow transition">
+              Pilih Gambar Kop
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2 space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-2">
+            <label class="text-sm font-semibold text-gray-700">Kepada Yth. TS Dokter</label>
+            <div class="md:col-span-2 flex items-center gap-2">
+              <span class="hidden md:inline text-gray-500">:</span>
+              <input type="text" id="in_dokter_ts" value=""
+                class="w-full border rounded px-3 py-1.5 text-sm focus:outline-blue-500">
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-2">
+            <label class="text-sm font-semibold text-gray-700">Di</label>
+            <div class="md:col-span-2 flex items-center gap-2">
+              <span class="hidden md:inline text-gray-500">:</span>
+              <input type="text" id="in_di" value="FKTRL Instansi Pemerintah"
+                class="w-full border rounded px-3 py-1.5 text-sm focus:outline-blue-500">
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-2">
+            <label class="text-sm font-semibold text-gray-700">No. Register</label>
+            <div class="md:col-span-2 flex items-center gap-2">
+              <span class="hidden md:inline text-gray-500">:</span>
+              <input type="text" id="in_no_register" value=""
+                class="w-full border rounded px-3 py-1.5 text-sm focus:outline-blue-500">
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-2">
+            <label class="text-sm font-semibold text-gray-700">Nama</label>
+            <div class="md:col-span-2 flex items-center gap-2">
+              <span class="hidden md:inline text-gray-500">:</span>
+              <input type="text" id="in_nama" value=""
+                class="w-full border rounded px-3 py-1.5 text-sm uppercase focus:outline-blue-500">
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-2">
+            <label class="text-sm font-semibold text-gray-700">Jenis Kelamin</label>
+            <div class="md:col-span-2 flex items-center gap-2">
+              <span class="hidden md:inline text-gray-500">:</span>
+              <select id="in_gender" class="w-full border rounded px-3 py-1.5 text-sm bg-white focus:outline-blue-500">
+                <option value="" selected disabled>Jenis Kelamin</option>
+                <option value="Perempuan">Perempuan</option>
+                <option value="Laki-laki">Laki-laki</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-2">
+            <label class="text-sm font-semibold text-gray-700">Prodi</label>
+            <div class="md:col-span-2 flex items-center gap-2">
+              <span class="hidden md:inline text-gray-500">:</span>
+              <input type="text" id="in_prodi" value=""
+                class="w-full border rounded px-3 py-1.5 text-sm focus:outline-blue-500">
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 items-start gap-2">
+            <label class="text-sm font-semibold text-gray-700 pt-1">Catatan Hasil Kesehatan</label>
+            <div class="md:col-span-2 flex items-start gap-2">
+              <span class="hidden md:inline text-gray-500 pt-1">:</span>
+              <textarea id="in_catatan" rows="3"
+                class="w-full border rounded px-3 py-1.5 text-sm focus:outline-blue-500"></textarea>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-2">
+            <label class="text-sm font-semibold text-gray-700">Kota</label>
+            <div class="md:col-span-2 flex items-center gap-2">
+              <span class="hidden md:inline text-gray-500">:</span>
+              <input type="text" id="in_kota" value="Malang"
+                class="w-full border rounded px-3 py-1.5 text-sm focus:outline-blue-500">
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-2">
+            <label class="text-sm font-semibold text-gray-700">Tanggal</label>
+            <div class="md:col-span-2 flex items-center gap-2">
+              <span class="hidden md:inline text-gray-500">:</span>
+              <input type="date" id="in_tanggal" value=""
+                class="w-full border rounded px-3 py-1.5 text-sm focus:outline-blue-500">
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-2">
+            <label class="text-sm font-semibold text-gray-700">Nama Dokter</label>
+            <div class="md:col-span-2 flex items-center gap-2">
+              <span class="hidden md:inline text-gray-500">:</span>
+              <input type="text" id="in_nama_dokter" value="dr. Alvira Aisyah Achdiat Agoes"
+                class="w-full border rounded px-3 py-1.5 text-sm focus:outline-blue-500">
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-2">
+            <label class="text-sm font-semibold text-gray-700">NIP Dokter</label>
+            <div class="md:col-span-2 flex items-center gap-2">
+              <span class="hidden md:inline text-gray-500">:</span>
+              <input type="text" id="in_nip_dokter" value="100.3.12/201.0489/35.73.406/2024"
+                class="w-full border rounded px-3 py-1.5 text-sm focus:outline-blue-500">
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-col items-center justify-start border-l pl-0 lg:pl-8 border-gray-200">
+          <span class="text-sm font-semibold text-gray-700 mb-2">Tanda Tangan Dokter</span>
+          <div
+            class="w-48 h-32 border border-gray-300 rounded bg-gray-50 flex items-center justify-center overflow-hidden relative mb-3">
+            <img id="ttd_preview"
+              src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='50' viewBox='0 0 100 50'><path d='M10 30 Q 30 5, 50 30 T 90 20' fill='none' stroke='black' stroke-width='2'/></svg>"
+              class="max-w-full max-h-full object-contain" alt="Pratinjau TTD">
+          </div>
+          <input type="file" id="in_ttd_file" accept="image/*" class="hidden" onchange="handleSignatureUpload(event)">
+          <button type="button" onclick="document.getElementById('in_ttd_file').click()"
+            class="bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold px-4 py-2 rounded shadow transition">
+            Pilih Gambar TTD
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-8 border-t pt-4">
+        <button onclick="generatePDF()"
+          class="w-full bg-[#15803d] hover:bg-green-800 text-white font-bold py-2.5 px-4 rounded transition flex items-center justify-center gap-2 uppercase tracking-wider text-sm shadow">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Generate PDF
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <div class="hidden">
+    <div id="pdf-template" class="pdf-font px-12 pb-12 pt-0 bg-white text-black text-[14px] leading-relaxed relative"
+      style="width: 210mm; height: auto; box-sizing: border-box;">
+
+      <div id="pdf_kop_custom" class="mb-6 hidden flex justify-center w-full">
+        <img id="pdf_kop_img" src="" class="w-full object-contain" alt="Kop Surat">
+      </div>
+
+      <div id="pdf_kop_default" class="flex items-center justify-between border-b-[3px] border-black pb-3 mb-6">
+        <div class="w-24 flex flex-col items-center">
+          <div class="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+            K</div>
+          <span class="text-[9px] font-bold text-center mt-1 leading-tight text-teal-600">Kemenkes<br><span
+              class="text-[7px] text-gray-500 font-normal">Poltekkes Malang</span></span>
+        </div>
+        <div class="text-center flex-1 px-4">
+          <h3 class="text-base font-bold uppercase tracking-tight leading-tight">Kementerian Kesehatan Republik
+            Indonesia</h3>
+          <h2 class="text-lg font-bold uppercase tracking-tight leading-tight">Politeknik Kesehatan Kemenkes Malang</h2>
+          <p class="text-[11px] mt-1 font-normal leading-normal">
+            Jl. Besar Ijen No. 77 C Malang, Jawa Timur 65112 <br>
+            (0341) 566075 | polkesma@kemenkes.go.id <br>
+            https://poltekkes-malang.ac.id
+          </p>
+        </div>
+        <div class="w-24 flex justify-center">
+          <div
+            class="w-14 h-14 bg-emerald-700 rounded-full flex items-center justify-center text-white font-serif font-bold text-xs border-2 border-yellow-400 text-center shadow-sm">
+            <span class="text-[8px] leading-none uppercase">Polkesma Malang</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-4 mt-8">
+        <div>
+          <table class="w-full text-[14px]">
+            <tr>
+              <td class="w-[140px] font-normal py-0.5">Kepada Yth. TS Dokter</td>
+              <td class="w-[15px] text-center py-0.5">:</td>
+              <td class="font-normal py-0.5" id="pdf_dokter_ts"></td>
+            </tr>
+            <tr>
+              <td class="font-normal py-0.5">Di</td>
+              <td class="text-center py-0.5">:</td>
+              <td class="font-normal py-0.5" id="pdf_di"></td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="pt-4 text-justify">
+          Sehubungan dengan Hasil tes Kesehatan peserta seleksi penerimaan Mahasiswa Poltekkes Kemenkes Malang, berikut
+          hasil Kesehatan saudara/i.
+        </div>
+
+        <div class="pl-4 py-2">
+          <table class="w-full text-[14px]">
+            <tr>
+              <td class="w-[180px] py-1">No. Register</td>
+              <td class="w-[20px] text-center py-1">:</td>
+              <td class="font-bold py-1" id="pdf_no_register"></td>
+            </tr>
+            <tr>
+              <td class="py-1">Nama</td>
+              <td class="text-center py-1">:</td>
+              <td class="font-bold uppercase py-1" id="pdf_nama"></td>
+            </tr>
+            <tr>
+              <td class="py-1">Jenis Kelamin</td>
+              <td class="text-center py-1">:</td>
+              <td class="py-1" id="pdf_gender"></td>
+            </tr>
+            <tr>
+              <td class="py-1">Prodi</td>
+              <td class="text-center py-1">:</td>
+              <td class="font-bold py-1" id="pdf_prodi"></td>
+            </tr>
+            <tr>
+              <td class="py-1 valign-top items-start">Catatan Hasil Kesehatan</td>
+              <td class="text-center py-1 valign-top">:</td>
+              <td class="py-1 text-justify font-medium" id="pdf_catatan"></td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="text-justify pt-2">
+          Mohon pemeriksaan dan penanganan lebih lanjut untuk rekomendasi mengikuti Proses Pendidikan di Politeknik
+          Kesehatan Kemenkes Malang.
+        </div>
+      </div>
+
+      <div class="mt-16 ml-auto w-[280px] text-[14px] flex flex-col items-start pl-8">
+        <div id="pdf_tempat_tanggal" class="mb-0.5"></div>
+        <div>Dokter Tim Kesehatan Polkesma</div>
+        <div class="mb-2">Tahun Ajar 2026/2027</div>
+
+        <div class="w-40 h-20 my-1 flex items-center justify-start overflow-hidden">
+          <img id="pdf_ttd_img" src="" class="max-w-full max-h-full object-contain" alt="Tanda Tangan">
+        </div>
+
+        <div class="font-bold underline" id="pdf_nama_dokter"></div>
+        <div id="pdf_nip_dokter" class="text-xs"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Upload Kop Surat
+    function handleKopUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          // Update UI Preview
+          document.getElementById('kop_preview').src = e.target.result;
+          document.getElementById('kop_preview').classList.remove('hidden');
+          document.getElementById('kop_placeholder').classList.add('hidden');
+
+          // Update PDF Template (Hide default, show custom)
+          document.getElementById('pdf_kop_img').src = e.target.result;
+          document.getElementById('pdf_kop_custom').classList.remove('hidden');
+          document.getElementById('pdf_kop_default').classList.add('hidden');
+        }
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Upload Tanda Tangan
+    function handleSignatureUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          document.getElementById('ttd_preview').src = e.target.result;
+          document.getElementById('pdf_ttd_img').src = e.target.result;
+        }
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function formatTanggalIndonesia(dateString) {
+      if (!dateString) return '';
+      const bulanIndo = [
+        "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+      ];
+      const date = new Date(dateString);
+      return `${date.getDate()} ${bulanIndo[date.getMonth()]} ${date.getFullYear()}`;
+    }
+
+    function generatePDF() {
+      document.getElementById('pdf_dokter_ts').innerText = document.getElementById('in_dokter_ts').value;
+      document.getElementById('pdf_di').innerText = document.getElementById('in_di').value;
+      document.getElementById('pdf_no_register').innerText = document.getElementById('in_no_register').value;
+      document.getElementById('pdf_nama').innerText = document.getElementById('in_nama').value;
+      document.getElementById('pdf_gender').innerText = document.getElementById('in_gender').value;
+      document.getElementById('pdf_prodi').innerText = document.getElementById('in_prodi').value;
+      document.getElementById('pdf_catatan').innerText = document.getElementById('in_catatan').value;
+      document.getElementById('pdf_nama_dokter').innerText = document.getElementById('in_nama_dokter').value;
+
+      const nip = document.getElementById('in_nip_dokter').value;
+      document.getElementById('pdf_nip_dokter').innerText = nip ? "SIP. " + nip : '';
+
+      const tanggalFormatted = formatTanggalIndonesia(document.getElementById('in_tanggal').value);
+      document.getElementById('pdf_tempat_tanggal').innerText = `${document.getElementById('in_kota').value}, ${tanggalFormatted}`;
+
+      if (!document.getElementById('pdf_ttd_img').src) {
+        document.getElementById('pdf_ttd_img').src = document.getElementById('ttd_preview').src;
+      }
+
+      const element = document.getElementById('pdf-template');
+      const opsi = {
+        margin: 0,
+        filename: 'Surat_Hasil_Kesehatan.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css'] } // <-- TAMBAHKAN BARIS INI
+
+      };
+
+      html2pdf().set(opsi).from(element).save();
+    }
+  </script>
+</body>
+
+</html>
